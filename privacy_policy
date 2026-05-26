@@ -1,0 +1,661 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Política de Privacidad — Sudoku</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+        :root {
+            --primary:        #1A73E8;
+            --primary-dark:   #1557B0;
+            --primary-light:  #C5D9F8;
+            --primary-xlight: #EBF3FE;
+            --background:     #FAFAFA;
+            --surface:        #FFFFFF;
+            --text-primary:   #1C1B1F;
+            --text-secondary: #5F6368;
+            --text-muted:     #9AA0A6;
+            --border:         #E8EDF7;
+            --shadow-sm:      0 1px 3px rgba(26,115,232,.07);
+            --shadow-md:      0 2px 10px rgba(26,115,232,.08), 0 1px 3px rgba(0,0,0,.04);
+            --shadow-lg:      0 6px 24px rgba(26,115,232,.12), 0 2px 6px rgba(0,0,0,.04);
+            --r-sm: 8px;
+            --r-md: 12px;
+            --r-lg: 16px;
+        }
+
+        html { scroll-behavior: smooth; }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: var(--background);
+            color: var(--text-primary);
+            line-height: 1.7;
+            min-height: 100vh;
+        }
+
+        /* ─── HEADER ─── */
+        .header {
+            background: linear-gradient(145deg, var(--primary) 0%, var(--primary-dark) 100%);
+            padding: 60px 24px 72px;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+        .header::before {
+            content: '';
+            position: absolute; top: -50px; right: -50px;
+            width: 240px; height: 240px;
+            border-radius: 50%;
+            background: rgba(255,255,255,.06);
+            pointer-events: none;
+        }
+        .header::after {
+            content: '';
+            position: absolute; bottom: -70px; left: -40px;
+            width: 300px; height: 300px;
+            border-radius: 50%;
+            background: rgba(255,255,255,.04);
+            pointer-events: none;
+        }
+        .header-inner {
+            position: relative; z-index: 1;
+            max-width: 700px; margin: 0 auto;
+        }
+
+        /* Mini sudoku 3×3 icon */
+        .sudoku-logo {
+            display: inline-grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 3px;
+            width: 52px; height: 52px;
+            background: rgba(255,255,255,.22);
+            border-radius: var(--r-md);
+            padding: 7px;
+            margin-bottom: 20px;
+        }
+        .sudoku-logo span {
+            background: white;
+            border-radius: 3px;
+        }
+        .sudoku-logo span:nth-child(2),
+        .sudoku-logo span:nth-child(4),
+        .sudoku-logo span:nth-child(6),
+        .sudoku-logo span:nth-child(8) { opacity: .22; }
+
+        .header h1 {
+            font-size: 2.1rem; font-weight: 700;
+            color: white; letter-spacing: -.5px;
+            margin-bottom: 6px;
+        }
+        .header-subtitle {
+            font-size: .95rem;
+            color: rgba(255,255,255,.82);
+            font-weight: 400;
+        }
+        .updated-badge {
+            display: inline-flex; align-items: center; gap: 6px;
+            margin-top: 18px;
+            background: rgba(255,255,255,.18);
+            color: rgba(255,255,255,.95);
+            border-radius: 20px;
+            padding: 5px 16px;
+            font-size: .78rem; font-weight: 500;
+            letter-spacing: .2px;
+        }
+
+        /* ─── LANGUAGE SWITCHER ─── */
+        .lang-switcher {
+            display: flex; justify-content: center;
+            margin: -22px auto 0;
+            width: fit-content;
+            background: var(--surface);
+            border-radius: 24px;
+            padding: 5px;
+            box-shadow: var(--shadow-lg);
+            position: relative; z-index: 20;
+        }
+        .lang-btn {
+            border: none;
+            background: transparent;
+            padding: 9px 26px;
+            border-radius: 19px;
+            font-family: inherit;
+            font-size: .875rem; font-weight: 600;
+            cursor: pointer;
+            transition: background .2s, color .2s, box-shadow .2s;
+            color: var(--text-secondary);
+        }
+        .lang-btn.active {
+            background: var(--primary);
+            color: white;
+            box-shadow: 0 2px 10px rgba(26,115,232,.35);
+        }
+        .lang-btn:not(.active):hover {
+            background: var(--primary-xlight);
+            color: var(--primary);
+        }
+
+        /* ─── MAIN ─── */
+        .main {
+            max-width: 740px;
+            margin: 0 auto;
+            padding: 52px 24px 88px;
+        }
+
+        .lang-content { display: none; }
+        .lang-content.active { display: block; }
+
+        .lang-divider {
+            display: flex; align-items: center; gap: 12px;
+            margin-bottom: 36px;
+            color: var(--text-muted);
+            font-size: .76rem; font-weight: 700;
+            letter-spacing: 1.2px;
+            text-transform: uppercase;
+        }
+        .lang-divider::before, .lang-divider::after {
+            content: ''; flex: 1; height: 1px;
+            background: var(--border);
+        }
+
+        /* Intro card */
+        .intro-card {
+            background: var(--primary-xlight);
+            border: 1px solid var(--primary-light);
+            border-left: 4px solid var(--primary);
+            border-radius: var(--r-md);
+            padding: 18px 24px;
+            margin-bottom: 28px;
+            font-size: .935rem;
+            color: var(--text-primary);
+            line-height: 1.75;
+        }
+
+        /* Section cards */
+        .section-card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: var(--r-lg);
+            padding: 26px 30px;
+            margin-bottom: 14px;
+            box-shadow: var(--shadow-sm);
+            transition: box-shadow .2s, transform .2s;
+        }
+        .section-card:hover {
+            box-shadow: var(--shadow-lg);
+            transform: translateY(-1px);
+        }
+
+        .section-header {
+            display: flex; align-items: center; gap: 14px;
+            margin-bottom: 14px;
+        }
+        .section-number {
+            width: 36px; height: 36px;
+            border-radius: 10px;
+            background: var(--primary);
+            color: white;
+            font-size: .82rem; font-weight: 700;
+            display: flex; align-items: center; justify-content: center;
+            flex-shrink: 0;
+            letter-spacing: 0;
+        }
+        .section-title {
+            font-size: 1rem; font-weight: 700;
+            color: var(--text-primary);
+            letter-spacing: -.2px;
+        }
+
+        .section-body {
+            font-size: .91rem;
+            color: var(--text-secondary);
+            line-height: 1.78;
+        }
+        .section-body p { margin-bottom: 10px; }
+        .section-body p:last-child { margin-bottom: 0; }
+
+        /* Custom bullet list */
+        .section-body ul {
+            list-style: none;
+            padding: 0;
+            margin: 8px 0 10px 2px;
+        }
+        .section-body ul li {
+            position: relative;
+            padding-left: 18px;
+            margin-bottom: 4px;
+        }
+        .section-body ul li::before {
+            content: '';
+            position: absolute; left: 3px; top: 9px;
+            width: 6px; height: 6px;
+            border-radius: 50%;
+            background: var(--primary);
+        }
+
+        /* Links */
+        .section-body a {
+            color: var(--primary);
+            text-decoration: none;
+            font-weight: 500;
+            border-bottom: 1px solid transparent;
+            transition: border-color .15s;
+        }
+        .section-body a:hover { border-bottom-color: var(--primary); }
+
+        /* Inline path highlight (Ajustes → Google) */
+        .path-tag {
+            display: inline-block;
+            font-size: .82rem;
+            background: var(--primary-xlight);
+            color: var(--primary-dark);
+            border: 1px solid var(--primary-light);
+            border-radius: 6px;
+            padding: 1px 9px;
+            font-family: 'SF Mono', 'Fira Code', 'Consolas', monospace;
+            white-space: nowrap;
+        }
+
+        /* ─── CONTACT CARD ─── */
+        .contact-card {
+            background: linear-gradient(145deg, var(--primary) 0%, var(--primary-dark) 100%);
+            border-radius: var(--r-lg);
+            padding: 26px 30px;
+            margin-top: 28px;
+        }
+        .contact-card .section-number {
+            background: rgba(255,255,255,.25);
+        }
+        .contact-card .section-title { color: white; }
+        .contact-card .section-body  { color: rgba(255,255,255,.88); }
+        .contact-card .section-body p { margin-bottom: 8px; }
+        .contact-card .section-body strong { color: white; font-weight: 600; }
+        .contact-card ul li::before { background: rgba(255,255,255,.6); }
+
+        .email-chip {
+            display: inline-flex; align-items: center; gap: 8px;
+            margin-top: 12px;
+            background: rgba(255,255,255,.18);
+            color: white !important;
+            border-radius: 10px;
+            padding: 9px 18px;
+            font-size: .89rem; font-weight: 500;
+            text-decoration: none;
+            border: 1px solid rgba(255,255,255,.22) !important;
+            transition: background .2s;
+        }
+        .email-chip:hover { background: rgba(255,255,255,.28); border-bottom-color: transparent !important; }
+
+        /* ─── FOOTER ─── */
+        .footer {
+            text-align: center;
+            padding: 20px 24px;
+            color: var(--text-muted);
+            font-size: .78rem;
+            border-top: 1px solid var(--border);
+        }
+
+        /* ─── RESPONSIVE ─── */
+        @media (max-width: 600px) {
+            .header { padding: 44px 20px 60px; }
+            .header h1 { font-size: 1.7rem; }
+            .main { padding: 40px 16px 64px; }
+            .section-card, .contact-card { padding: 22px 18px; }
+            .lang-btn { padding: 8px 18px; }
+        }
+    </style>
+</head>
+<body>
+
+<!-- ═══════════════════════════════════ HEADER ══════════════════════════════════ -->
+<header class="header">
+    <div class="header-inner">
+        <div class="sudoku-logo" aria-hidden="true">
+            <span></span><span></span><span></span>
+            <span></span><span></span><span></span>
+            <span></span><span></span><span></span>
+        </div>
+        <h1>Sudoku</h1>
+        <p class="header-subtitle">Política de Privacidad · Privacy Policy</p>
+        <span class="updated-badge">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                <path d="M11.99 2C6.47 2 2 6.48 2 12s4.47 10 9.99 10C17.52 22 22 17.52 22 12S17.52 2 11.99 2zM12 20c-4.42 0-8-3.58-8-8s3.58-8 8-8 8 3.58 8 8-3.58 8-8 8zm.5-13H11v6l5.25 3.15.75-1.23-4.5-2.67V7z"/>
+            </svg>
+            Actualizado · Updated: Mayo 2026
+        </span>
+    </div>
+</header>
+
+<!-- ═════════════════════════════ LANGUAGE SWITCHER ═════════════════════════════ -->
+<div class="lang-switcher" role="group" aria-label="Selector de idioma">
+    <button class="lang-btn active" onclick="switchLang('es', this)">🇪🇸 Español</button>
+    <button class="lang-btn"        onclick="switchLang('en', this)">🇬🇧 English</button>
+</div>
+
+<!-- ═══════════════════════════════════ MAIN ════════════════════════════════════ -->
+<main class="main">
+
+    <!-- ────────────────── ESPAÑOL ────────────────── -->
+    <div id="lang-es" class="lang-content active">
+
+        <div class="lang-divider">Español</div>
+
+        <div class="intro-card">
+            Gracias por utilizar Sudoku. La privacidad de los usuarios es importante para nosotros. Esta aplicación ha sido diseñada para ofrecer una experiencia simple, segura y respetuosa con los datos del usuario.
+        </div>
+
+        <!-- §1 -->
+        <div class="section-card">
+            <div class="section-header">
+                <div class="section-number">1</div>
+                <h2 class="section-title">Información recopilada</h2>
+            </div>
+            <div class="section-body">
+                <p>Sudoku no solicita cuentas ni recopila información personal identificable como:</p>
+                <ul>
+                    <li>nombre,</li>
+                    <li>dirección,</li>
+                    <li>fotografías,</li>
+                    <li>contactos,</li>
+                    <li>ni ubicación.</li>
+                </ul>
+                <p>La aplicación puede utilizar servicios de terceros que recopilan información técnica limitada necesaria para su funcionamiento y monetización.</p>
+            </div>
+        </div>
+
+        <!-- §2 -->
+        <div class="section-card">
+            <div class="section-header">
+                <div class="section-number">2</div>
+                <h2 class="section-title">Publicidad y AdMob</h2>
+            </div>
+            <div class="section-body">
+                <p>Sudoku utiliza Google AdMob para mostrar anuncios dentro de la aplicación. AdMob puede recopilar ciertos identificadores técnicos, como:</p>
+                <ul>
+                    <li>Advertising ID,</li>
+                    <li>información básica del dispositivo,</li>
+                    <li>métricas de interacción publicitaria.</li>
+                </ul>
+                <p>Estos datos son gestionados directamente por Google conforme a sus propias políticas de privacidad.</p>
+                <p>Los usuarios pueden restablecer o inhabilitar el Advertising ID desde los ajustes del dispositivo: <span class="path-tag">Ajustes → Google → Anuncios</span></p>
+                <p>Esta aplicación no recopila ni transmite datos de menores de forma intencionada. Para información sobre privacidad infantil en publicidad, consulta las políticas de Google AdMob.</p>
+                <p>Más información: <a href="https://policies.google.com/privacy" target="_blank" rel="noopener noreferrer">policies.google.com/privacy ↗</a></p>
+            </div>
+        </div>
+
+        <!-- §3 -->
+        <div class="section-card">
+            <div class="section-header">
+                <div class="section-number">3</div>
+                <h2 class="section-title">Consentimiento y privacidad (GDPR)</h2>
+            </div>
+            <div class="section-body">
+                <p>La aplicación utiliza Google User Messaging Platform (UMP) para gestionar el consentimiento de privacidad en regiones donde sea requerido legalmente (como el Espacio Económico Europeo y Reino Unido).</p>
+                <p>Los usuarios pueden:</p>
+                <ul>
+                    <li>aceptar,</li>
+                    <li>rechazar,</li>
+                    <li>o gestionar sus preferencias de anuncios personalizados.</li>
+                </ul>
+                <p>El consentimiento puede modificarse posteriormente desde los ajustes de la aplicación.</p>
+            </div>
+        </div>
+
+        <!-- §4 -->
+        <div class="section-card">
+            <div class="section-header">
+                <div class="section-number">4</div>
+                <h2 class="section-title">Datos almacenados localmente</h2>
+            </div>
+            <div class="section-body">
+                <p>Sudoku guarda información localmente en el dispositivo del usuario, incluyendo:</p>
+                <ul>
+                    <li>progreso de partidas,</li>
+                    <li>estadísticas,</li>
+                    <li>configuraciones,</li>
+                    <li>preferencias,</li>
+                    <li>y récords.</li>
+                </ul>
+                <p>Estos datos permanecen almacenados únicamente en el dispositivo del usuario y no se envían a servidores externos.</p>
+            </div>
+        </div>
+
+        <!-- §5 -->
+        <div class="section-card">
+            <div class="section-header">
+                <div class="section-number">5</div>
+                <h2 class="section-title">Notificaciones</h2>
+            </div>
+            <div class="section-body">
+                <p>La aplicación puede enviar notificaciones locales relacionadas con recordatorios diarios de juego.</p>
+                <p>Las notificaciones pueden desactivarse en cualquier momento desde:</p>
+                <ul>
+                    <li>los ajustes de la app,</li>
+                    <li>o la configuración del dispositivo.</li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- §6 -->
+        <div class="section-card">
+            <div class="section-header">
+                <div class="section-number">6</div>
+                <h2 class="section-title">Seguridad</h2>
+            </div>
+            <div class="section-body">
+                <p>Aunque se aplican medidas razonables para mantener una experiencia segura, ninguna transmisión o almacenamiento electrónico puede garantizar seguridad absoluta.</p>
+            </div>
+        </div>
+
+        <!-- §7 -->
+        <div class="section-card">
+            <div class="section-header">
+                <div class="section-number">7</div>
+                <h2 class="section-title">Cambios en esta política</h2>
+            </div>
+            <div class="section-body">
+                <p>Esta política de privacidad puede actualizarse ocasionalmente para reflejar:</p>
+                <ul>
+                    <li>cambios legales,</li>
+                    <li>mejoras técnicas,</li>
+                    <li>nuevas funcionalidades,</li>
+                    <li>o cambios en servicios de terceros.</li>
+                </ul>
+                <p>La fecha de actualización aparecerá siempre en la parte superior de este documento.</p>
+            </div>
+        </div>
+
+        <!-- §8 Contacto -->
+        <div class="contact-card">
+            <div class="section-header">
+                <div class="section-number">8</div>
+                <h2 class="section-title">Contacto</h2>
+            </div>
+            <div class="section-body">
+                <p>Si tienes preguntas relacionadas con esta política de privacidad, puedes contactar a:</p>
+                <p><strong>ILL Support</strong></p>
+                <a class="email-chip" href="mailto:ill.desarrolladores@gmail.com">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                        <path d="M20 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4l-8 5-8-5V6l8 5 8-5v2z"/>
+                    </svg>
+                    ill.desarrolladores@gmail.com
+                </a>
+            </div>
+        </div>
+
+    </div><!-- /lang-es -->
+
+    <!-- ────────────────── ENGLISH ────────────────── -->
+    <div id="lang-en" class="lang-content">
+
+        <div class="lang-divider">English</div>
+
+        <div class="intro-card">
+            Thank you for using Sudoku. User privacy is important to us. This application has been designed to provide a simple, secure, and privacy-respecting experience.
+        </div>
+
+        <!-- §1 -->
+        <div class="section-card">
+            <div class="section-header">
+                <div class="section-number">1</div>
+                <h2 class="section-title">Information collected</h2>
+            </div>
+            <div class="section-body">
+                <p>Sudoku does not require accounts and does not collect personally identifiable information such as:</p>
+                <ul>
+                    <li>name,</li>
+                    <li>address,</li>
+                    <li>photos,</li>
+                    <li>contacts,</li>
+                    <li>or location.</li>
+                </ul>
+                <p>The application may use third-party services that collect limited technical information necessary for operation and monetization.</p>
+            </div>
+        </div>
+
+        <!-- §2 -->
+        <div class="section-card">
+            <div class="section-header">
+                <div class="section-number">2</div>
+                <h2 class="section-title">Advertising and AdMob</h2>
+            </div>
+            <div class="section-body">
+                <p>Sudoku uses Google AdMob to display ads within the application. AdMob may collect certain technical identifiers, including:</p>
+                <ul>
+                    <li>Advertising ID,</li>
+                    <li>basic device information,</li>
+                    <li>advertising interaction metrics.</li>
+                </ul>
+                <p>This data is managed directly by Google in accordance with their own privacy policies.</p>
+                <p>Users may reset or disable the Advertising ID from their device settings: <span class="path-tag">Settings → Google → Ads</span></p>
+                <p>This application does not intentionally collect or transmit data from children. For information about children's privacy in advertising, please refer to Google AdMob's policies.</p>
+                <p>More information: <a href="https://policies.google.com/privacy" target="_blank" rel="noopener noreferrer">policies.google.com/privacy ↗</a></p>
+            </div>
+        </div>
+
+        <!-- §3 -->
+        <div class="section-card">
+            <div class="section-header">
+                <div class="section-number">3</div>
+                <h2 class="section-title">Consent and privacy (GDPR)</h2>
+            </div>
+            <div class="section-body">
+                <p>The application uses Google User Messaging Platform (UMP) to manage privacy consent in regions where legally required (such as the European Economic Area and United Kingdom).</p>
+                <p>Users may:</p>
+                <ul>
+                    <li>accept,</li>
+                    <li>decline,</li>
+                    <li>or manage their personalized ad preferences.</li>
+                </ul>
+                <p>Consent can be modified at any time from the app's settings.</p>
+            </div>
+        </div>
+
+        <!-- §4 -->
+        <div class="section-card">
+            <div class="section-header">
+                <div class="section-number">4</div>
+                <h2 class="section-title">Locally stored data</h2>
+            </div>
+            <div class="section-body">
+                <p>Sudoku stores information locally on the user's device, including:</p>
+                <ul>
+                    <li>game progress,</li>
+                    <li>statistics,</li>
+                    <li>settings,</li>
+                    <li>preferences,</li>
+                    <li>and records.</li>
+                </ul>
+                <p>This data remains stored solely on the user's device and is not sent to external servers.</p>
+            </div>
+        </div>
+
+        <!-- §5 -->
+        <div class="section-card">
+            <div class="section-header">
+                <div class="section-number">5</div>
+                <h2 class="section-title">Notifications</h2>
+            </div>
+            <div class="section-body">
+                <p>The application may send local notifications related to daily game reminders.</p>
+                <p>Notifications can be disabled at any time from:</p>
+                <ul>
+                    <li>the app settings,</li>
+                    <li>or the device settings.</li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- §6 -->
+        <div class="section-card">
+            <div class="section-header">
+                <div class="section-number">6</div>
+                <h2 class="section-title">Security</h2>
+            </div>
+            <div class="section-body">
+                <p>While reasonable measures are applied to maintain a safe experience, no electronic transmission or storage can guarantee absolute security.</p>
+            </div>
+        </div>
+
+        <!-- §7 -->
+        <div class="section-card">
+            <div class="section-header">
+                <div class="section-number">7</div>
+                <h2 class="section-title">Changes to this policy</h2>
+            </div>
+            <div class="section-body">
+                <p>This privacy policy may be updated occasionally to reflect:</p>
+                <ul>
+                    <li>legal changes,</li>
+                    <li>technical improvements,</li>
+                    <li>new features,</li>
+                    <li>or changes in third-party services.</li>
+                </ul>
+                <p>The update date will always appear at the top of this document.</p>
+            </div>
+        </div>
+
+        <!-- §8 Contact -->
+        <div class="contact-card">
+            <div class="section-header">
+                <div class="section-number">8</div>
+                <h2 class="section-title">Contact</h2>
+            </div>
+            <div class="section-body">
+                <p>If you have questions regarding this privacy policy, you may contact:</p>
+                <p><strong>ILL Support</strong></p>
+                <a class="email-chip" href="mailto:ill.desarrolladores@gmail.com">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                        <path d="M20 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4l-8 5-8-5V6l8 5 8-5v2z"/>
+                    </svg>
+                    ill.desarrolladores@gmail.com
+                </a>
+            </div>
+        </div>
+
+    </div><!-- /lang-en -->
+
+</main>
+
+<!-- ═══════════════════════════════════ FOOTER ══════════════════════════════════ -->
+<footer class="footer">
+    Sudoku &nbsp;·&nbsp; Mayo 2026 &nbsp;·&nbsp; Todos los derechos reservados
+</footer>
+
+<script>
+    function switchLang(lang, btn) {
+        document.querySelectorAll('.lang-content').forEach(el => el.classList.remove('active'));
+        document.querySelectorAll('.lang-btn').forEach(el => el.classList.remove('active'));
+        document.getElementById('lang-' + lang).classList.add('active');
+        btn.classList.add('active');
+    }
+</script>
+
+</body>
+</html>
